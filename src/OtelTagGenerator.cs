@@ -16,7 +16,7 @@ public class OtelTagGenerator : ISourceGenerator
     {
         context.RegisterForSyntaxNotifications(() => new SyntaxReceiver());
     }
-
+    
     public void Execute(GeneratorExecutionContext context)
     {
         if (!(context.SyntaxContextReceiver is SyntaxReceiver receiver))
@@ -26,13 +26,24 @@ public class OtelTagGenerator : ISourceGenerator
 
         foreach (var classSymbol in receiver.CandidateClasses)
         {
-            string classSource = ProcessClass(classSymbol);
-            context.AddSource($"{classSymbol.Name}_OtelTags.g.cs", SourceText.From(classSource, Encoding.UTF8));
+            if (classSymbol.DeclaredAccessibility == Accessibility.Public)
+            {
+                string classSource = ProcessClass(classSymbol);
+                if (!string.IsNullOrEmpty(classSource))
+                {
+                    context.AddSource($"{classSymbol.Name}_OtelTags.g.cs", SourceText.From(classSource, Encoding.UTF8));
+                }
+            }
         }
     }
-
+    
     private string ProcessClass(INamedTypeSymbol classSymbol)
     {
+        if (classSymbol.DeclaredAccessibility != Accessibility.Public)
+        {
+            return string.Empty; // Don't generate extensions for non-public classes
+        }
+
         var namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
         var properties = classSymbol.GetMembers().OfType<IPropertySymbol>().ToImmutableArray();
 
@@ -106,7 +117,7 @@ public class SyntaxReceiver : ISyntaxContextReceiver
         if (context.Node is ClassDeclarationSyntax classDeclarationSyntax)
         {
             var symbol = context.SemanticModel.GetDeclaredSymbol(classDeclarationSyntax) as INamedTypeSymbol;
-            if (symbol != null)
+            if (symbol != null && symbol.DeclaredAccessibility == Accessibility.Public)
             {
                 CandidateClasses.Add(symbol);
             }
