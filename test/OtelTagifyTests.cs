@@ -1,6 +1,4 @@
-using OpenTelemetry.Trace;
 using System.Diagnostics;
-using Xunit;
 
 namespace OtelTagify.Tests
 {
@@ -95,11 +93,11 @@ namespace OtelTagify.Tests
     public class TestClass
     {
         [OtelTag("tagged_property")]
-        public string TaggedProperty { get; set; }
+        public string? TaggedProperty { get; set; }
 
         [OtelTag("prefixed_property", "prefix")]
         public int PrefixedProperty { get; set; }
 
-        public string UntaggedProperty { get; set; }
+        public string? UntaggedProperty { get; set; }
     }
 }
