@@ -4,57 +4,49 @@ using Microsoft.CodeAnalysis.Text;
 using System.Collections.Immutable;
 using System.Text;
 
-namespace OtelTagify
+namespace OtelTagify;
+
+[Generator]
+public class OtelTagGenerator : ISourceGenerator
 {
-    [Generator]
-    public class OtelTagGenerator : ISourceGenerator
+    private const string AttributeName = "OtelTagAttribute";
+    private const string ConfigurationClassName = "OtelTagConfiguration";
+
+    public void Initialize(GeneratorInitializationContext context)
     {
-        private const string AttributeName = "OtelTagAttribute";
-        private const string ConfigurationClassName = "OtelTagConfiguration";
+        context.RegisterForSyntaxNotifications(() => new SyntaxReceiver());
+    }
 
-        /// <summary>
-        /// Initializes the generator and registers the syntax receiver.
-        /// </summary>
-        /// <param name="context">The generator initialization context.</param>
-        public void Initialize(GeneratorInitializationContext context)
+    public void Execute(GeneratorExecutionContext context)
+    {
+        if (!(context.SyntaxContextReceiver is SyntaxReceiver receiver))
         {
-            context.RegisterForSyntaxNotifications(() => new SyntaxReceiver());
+            return;
         }
 
-        /// <summary>
-        /// Executes the source generator.
-        /// </summary>
-        /// <param name="context">The generator execution context.</param>
-        public void Execute(GeneratorExecutionContext context)
+        foreach (var classSymbol in receiver.CandidateClasses)
         {
-            if (!(context.SyntaxContextReceiver is SyntaxReceiver receiver))
-            {
-                return;
-            }
-
-            foreach (var classSymbol in receiver.CandidateClasses)
-            {
-                string classSource = ProcessClass(classSymbol);
-                context.AddSource($"{classSymbol.Name}_OtelTags.g.cs", SourceText.From(classSource, Encoding.UTF8));
-            }
+            string classSource = ProcessClass(classSymbol);
+            context.AddSource($"{classSymbol.Name}_OtelTags.g.cs", SourceText.From(classSource, Encoding.UTF8));
         }
+    }
 
-        private string ProcessClass(INamedTypeSymbol classSymbol)
-        {
-            var namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
-            var properties = classSymbol.GetMembers().OfType<IPropertySymbol>().ToImmutableArray();
+    private string ProcessClass(INamedTypeSymbol classSymbol)
+    {
+        var namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
+        var properties = classSymbol.GetMembers().OfType<IPropertySymbol>().ToImmutableArray();
 
-            var sourceBuilder = new StringBuilder();
-            sourceBuilder.AppendLine($@"
-using OpenTelemetry.Trace;
+        var sourceBuilder = new StringBuilder();
+        sourceBuilder.AppendLine($@"
+using System.Diagnostics;
 
 namespace {namespaceName}
 {{
     public static class {classSymbol.Name}OtelExtensions
     {{
-        public static TSpan SetTagsFromObject<TSpan>(this TSpan span, {classSymbol.Name} obj) where TSpan : ISpan
+        public static Activity SetTagsFromObject(this Activity activity, {classSymbol.Name} obj)
         {{
-            if (obj == null || span == null) return span;
+            if (activity == null || obj == null) return activity;
 
             if ({ConfigurationClassName}.TagAllProperties)
             {{
@@ -64,66 +56,59 @@ namespace {namespaceName}
             {{
                 {GenerateTaggedPropertiesCode(properties)}
             }}
-            return span;
+            return activity;
         }}
     }}
 }}");
 
-            return sourceBuilder.ToString();
-        }
-
-        private string GenerateAllPropertiesCode(ImmutableArray<IPropertySymbol> properties)
-        {
-            var codeBuilder = new StringBuilder();
-            foreach (var property in properties)
-            {
-                codeBuilder.AppendLine($@"                if (obj.{property.Name} != null) 
-                    span.SetTag(""{property.Name.ToLowerInvariant()}"", obj.{property.Name}.ToString());");
-            }
-            return codeBuilder.ToString();
-        }
-
-        private string GenerateTaggedPropertiesCode(ImmutableArray<IPropertySymbol> properties)
-        {
-            var codeBuilder = new StringBuilder();
-            foreach (var property in properties)
-            {
-                var attribute = property.GetAttributes().FirstOrDefault(ad => ad.AttributeClass?.Name == AttributeName);
-                if (attribute != null)
-                {
-                    var tagName = attribute.ConstructorArguments[0].Value?.ToString();
-                    var prefix = attribute.ConstructorArguments.Length > 1 
-                        ? attribute.ConstructorArguments[1].Value?.ToString() 
-                        : null;
-
-                    var fullTagName = string.IsNullOrEmpty(prefix) ? tagName : $"{prefix}.{tagName}";
-                    codeBuilder.AppendLine($@"                if (obj.{property.Name} != null) 
-                    span.SetTag(""{fullTagName}"", obj.{property.Name}.ToString());");
-                }
-            }
-            return codeBuilder.ToString();
-        }
+        return sourceBuilder.ToString();
     }
 
-    /// <summary>
-    /// Syntax receiver to collect candidate classes for source generation.
-    /// </summary>
-    public class SyntaxReceiver : ISyntaxContextReceiver
+    private string GenerateAllPropertiesCode(ImmutableArray<IPropertySymbol> properties)
     {
-        public List<INamedTypeSymbol> CandidateClasses { get; } = new List<INamedTypeSymbol>();
-
-        /// <summary>
-        /// Called for every syntax node in the compilation, we can inspect the nodes and save any information useful for generation.
-        /// </summary>
-        public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
+        var codeBuilder = new StringBuilder();
+        foreach (var property in properties)
         {
-            if (context.Node is ClassDeclarationSyntax classDeclarationSyntax)
+            codeBuilder.AppendLine($@"                if (obj.{property.Name} != null) 
+                    activity.SetTag(""{property.Name.ToLowerInvariant()}"", obj.{property.Name}.ToString());");
+        }
+        return codeBuilder.ToString();
+    }
+
+    private string GenerateTaggedPropertiesCode(ImmutableArray<IPropertySymbol> properties)
+    {
+        var codeBuilder = new StringBuilder();
+        foreach (var property in properties)
+        {
+            var attribute = property.GetAttributes().FirstOrDefault(ad => ad.AttributeClass?.Name == AttributeName);
+            if (attribute != null)
             {
-                var symbol = context.SemanticModel.GetDeclaredSymbol(classDeclarationSyntax) as INamedTypeSymbol;
-                if (symbol != null)
-                {
-                    CandidateClasses.Add(symbol);
-                }
+                var tagName = attribute.ConstructorArguments[0].Value?.ToString();
+                var prefix = attribute.ConstructorArguments.Length > 1 
+                    ? attribute.ConstructorArguments[1].Value?.ToString() 
+                    : null;
+
+                var fullTagName = string.IsNullOrEmpty(prefix) ? tagName : $"{prefix}.{tagName}";
+                codeBuilder.AppendLine($@"                if (obj.{property.Name} != null) 
+                    activity.SetTag(""{fullTagName}"", obj.{property.Name}.ToString());");
+            }
+        }
+        return codeBuilder.ToString();
+    }
+}
+
+public class SyntaxReceiver : ISyntaxContextReceiver
+{
+    public List<INamedTypeSymbol> CandidateClasses { get; } = new List<INamedTypeSymbol>();
+
+    public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
+    {
+        if (context.Node is ClassDeclarationSyntax classDeclarationSyntax)
+        {
+            var symbol = context.SemanticModel.GetDeclaredSymbol(classDeclarationSyntax) as INamedTypeSymbol;
+            if (symbol != null)
+            {
+                CandidateClasses.Add(symbol);
             }
         }
     }
