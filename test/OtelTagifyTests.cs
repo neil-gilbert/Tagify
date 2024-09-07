@@ -68,8 +68,8 @@ namespace OtelTagify.Tests
             activity.SetTagsFromObject(testObject);
 
             // Assert
-            Assert.Equal("test value", activity.GetTagItem("tagged_property"));
-            Assert.Equal("42", activity.GetTagItem("prefix.prefixed_property"));
+            Assert.Equal("test value", activity.GetTagItem("taggedproperty"));
+            Assert.Equal("42", activity.GetTagItem("prefixedproperty"));
             Assert.Equal("should be tagged now", activity.GetTagItem("untaggedproperty"));
 
             // Clean up
