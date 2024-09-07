@@ -1,2 +1,62 @@
 # OtelTagify
 A flexible, high-performance OpenTelemetry tag generator for .NET using source generators. Simplify your telemetry with automatic property-to-tag mapping.
+
+Fed up with manually tagging your OpenTelemetry spans? OtelTagify is here to save the day! This nifty little library uses the power of source generators to automatically create OpenTelemetry tags from your C# properties. No more tedious, repetitive tagging code – just decorate your properties and let OtelTagify do the heavy lifting.
+
+## What's it all about?
+
+OtelTagify is a high-performance, flexible OpenTelemetry tag generator for .NET applications. It leverages source generators to create efficient, compile-time code for mapping your object properties to OpenTelemetry tags. Whether you want to tag all properties or just a select few, OtelTagify has got you covered.
+
+## Getting Started
+
+First things first, install the NuGet package:
+```
+dotnet add package OtelTagify
+```
+
+Next, decorate the properties you want to tag with the OtelTag attribute:
+```
+public class PaymentResponse
+{
+    [OtelTag("transaction_id")]
+    public string TransactionId { get; set; }
+
+    [OtelTag("amount", "payment")]
+    public decimal Amount { get; set; }
+
+    public string UntaggedProperty { get; set; }
+}
+```
+
+Use the generated extension method to add tags to your span:
+```
+var response = new PaymentResponse
+{
+    TransactionId = "txn_123456",
+    Amount = 100.50m,
+    UntaggedProperty = "This won't be tagged"
+};
+
+activity?.SetTagsFromObject(response);
+```
+
+And you're done! OtelTagify will generate an extension method that adds the tagged properties as span tags.
+Configuration
+Want to tag all properties without adding attributes? No worries! Just set OtelTagConfiguration.TagAllProperties to true in your startup code:
+```
+OtelTagConfiguration.TagAllProperties = true;
+```
+Now all properties will be tagged, even those without the OtelTag attribute.
+
+## Why OtelTagify?
+
+ - Efficient: Uses source generators for zero runtime reflection cost.
+ - Flexible: Tag all properties or just the ones you choose. Simple:
+ - Just add an attribute and you're good to go. 
+ - Clean Code: Say goodbye to repetitive tagging code cluttering up your codebase.
+
+## Contributing
+
+Found a bug? Have a great idea for an improvement? We'd love to hear from you! Feel free to open an issue or submit a pull request.
+
+Happy tagging! 🏷️
