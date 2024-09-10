@@ -4,13 +4,12 @@ using Microsoft.CodeAnalysis.Text;
 using System.Collections.Immutable;
 using System.Text;
 
-namespace OtelTagify;
+namespace Tagify;
 
 [Generator]
-public class OtelTagGenerator : ISourceGenerator
+public class ActionTagGenerator : ISourceGenerator
 {
-    private const string AttributeName = "OtelTagAttribute";
-    private const string ConfigurationClassName = "OtelTagConfiguration";
+    private const string AttributeName = "ActionTagAttribute";
 
     public void Initialize(GeneratorInitializationContext context)
     {
@@ -31,7 +30,7 @@ public class OtelTagGenerator : ISourceGenerator
                 string classSource = ProcessClass(classSymbol);
                 if (!string.IsNullOrEmpty(classSource))
                 {
-                    context.AddSource($"{classSymbol.Name}_OtelTags.g.cs", SourceText.From(classSource, Encoding.UTF8));
+                    context.AddSource($"{classSymbol.Name}_ActionTags.g.cs", SourceText.From(classSource, Encoding.UTF8));
                 }
             }
         }
@@ -59,14 +58,8 @@ namespace {namespaceName}
         {{
             if (activity == null || obj == null) return activity;
 
-            if ({ConfigurationClassName}.TagAllProperties)
-            {{
-                {GenerateAllPropertiesCode(properties)}
-            }}
-            else
-            {{
-                {GenerateTaggedPropertiesCode(properties)}
-            }}
+            {GenerateTaggedPropertiesCode(properties)}
+
             return activity;
         }}
     }}
@@ -74,33 +67,23 @@ namespace {namespaceName}
 
         return sourceBuilder.ToString();
     }
-
-    private string GenerateAllPropertiesCode(ImmutableArray<IPropertySymbol> properties)
-    {
-        var codeBuilder = new StringBuilder();
-        foreach (var property in properties)
-        {
-            codeBuilder.AppendLine($@"                if (obj.{property.Name} != null) 
-                    activity.SetTag(""{property.Name.ToLowerInvariant()}"", obj.{property.Name}.ToString());");
-        }
-        return codeBuilder.ToString();
-    }
-
+    
     private string GenerateTaggedPropertiesCode(ImmutableArray<IPropertySymbol> properties)
     {
         var codeBuilder = new StringBuilder();
         foreach (var property in properties)
         {
             var attribute = property.GetAttributes().FirstOrDefault(ad => ad.AttributeClass?.Name == AttributeName);
-            if (attribute != null)
+            if (attribute is not null)
             {
                 var tagName = attribute.ConstructorArguments[0].Value?.ToString();
+                
                 var prefix = attribute.ConstructorArguments.Length > 1 
                     ? attribute.ConstructorArguments[1].Value?.ToString() 
                     : null;
 
                 var fullTagName = string.IsNullOrEmpty(prefix) ? tagName : $"{prefix}.{tagName}";
-                codeBuilder.AppendLine($@"                if (obj.{property.Name} != null) 
+                codeBuilder.AppendLine($@"                if (obj.{property.Name} is not null) 
                     activity.SetTag(""{fullTagName}"", obj.{property.Name}.ToString());");
             }
         }
