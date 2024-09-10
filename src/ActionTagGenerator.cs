@@ -74,7 +74,7 @@ namespace {namespaceName}
         foreach (var property in properties)
         {
             var attribute = property.GetAttributes().FirstOrDefault(ad => ad.AttributeClass?.Name == AttributeName);
-            if (attribute is not null)
+            if (attribute != null)
             {
                 var tagName = attribute.ConstructorArguments[0].Value?.ToString();
                 
@@ -83,7 +83,7 @@ namespace {namespaceName}
                     : null;
 
                 var fullTagName = string.IsNullOrEmpty(prefix) ? tagName : $"{prefix}.{tagName}";
-                codeBuilder.AppendLine($@"                if (obj.{property.Name} is not null) 
+                codeBuilder.AppendLine($@"                if (obj.{property.Name} != null) 
                     activity.SetTag(""{fullTagName}"", obj.{property.Name}.ToString());");
             }
         }
