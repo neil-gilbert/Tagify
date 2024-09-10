@@ -9,7 +9,7 @@ Tagify is a high-performance, flexible OpenTelemetry tag generator for .NET appl
 
 First things first, install the NuGet package:
 ```
-dotnet add package OtelTagify
+dotnet add package Tagify
 ```
 
 Next, decorate the properties you want to tag with the OtelTag attribute:
