@@ -28,7 +28,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\src\OtelTagify.csproj"
+      <ProjectReference Include="..\src\Tagify.csproj"
                         ReferenceOutputAssembly="true"
                         OutputItemType="Analyzer" />
     </ItemGroup>
