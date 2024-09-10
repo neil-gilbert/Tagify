@@ -49,12 +49,12 @@ Now all properties will be tagged, even those without the OtelTag attribute.
 ## Why OtelTagify?
 
  - Efficient: Uses source generators for zero runtime reflection cost.
- - Flexible: Tag all properties or just the ones you choose. Simple:
- - Just add an attribute and you're good to go. 
+ - Flexible: Tag all properties or just the ones you choose.
+ - Simple: Just add an attribute and you're good to go. 
  - Clean Code: Say goodbye to repetitive tagging code cluttering up your codebase.
 
 ## Contributing
 
-Found a bug? Have a great idea for an improvement? We'd love to hear from you! Feel free to open an issue or submit a pull request.
+Found a bug? Have a great idea for an improvement? Feel free to open an issue or submit a pull request.
 
 Happy tagging! 🏷️
