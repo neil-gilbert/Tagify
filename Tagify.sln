@@ -1,7 +1,7 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OtelTagify", "src\OtelTagify.csproj", "{63AF536F-CC45-4076-B363-B9445918DE70}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tagify", "src\Tagify.csproj", "{63AF536F-CC45-4076-B363-B9445918DE70}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OtelTagify.Tests", "test\OtelTagify.Tests.csproj", "{E96A29DA-173B-498F-BC4B-29B3822AA4BE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tagify.Tests", "test\Tagify.Tests.csproj", "{E96A29DA-173B-498F-BC4B-29B3822AA4BE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
