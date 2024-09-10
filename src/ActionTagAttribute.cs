@@ -3,13 +3,13 @@ namespace Tagify;
 /// <summary>
 /// Attribute to specify OpenTelemetry tag details for a property.
 /// </summary>
-[AttributeUsage(AttributeTargets.Property)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Property)]
 public class ActionTagAttribute : Attribute
 {
     /// <summary>
     /// Gets the name of the tag.
     /// </summary>
-    public string Name { get; }
+    public string? Name { get; }
 
     /// <summary>
     /// Gets the prefix for the tag.
@@ -21,7 +21,7 @@ public class ActionTagAttribute : Attribute
     /// </summary>
     /// <param name="name">The name of the tag.</param>
     /// <param name="prefix">The prefix for the tag.</param>
-    public ActionTagAttribute(string name, string? prefix = null)
+    public ActionTagAttribute(string? name = null, string? prefix = null)
     {
         Name = name;
         Prefix = prefix;
