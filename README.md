@@ -1,8 +1,6 @@
 # OtelTagify
 A flexible, high-performance OpenTelemetry tag generator for .NET using source generators. Simplify your telemetry with automatic property-to-tag mapping.
 
-Fed up with manually tagging your OpenTelemetry spans? OtelTagify is here to save the day! This nifty little library uses the power of source generators to automatically create OpenTelemetry tags from your C# properties. No more tedious, repetitive tagging code – just decorate your properties and let OtelTagify do the heavy lifting.
-
 ## What's it all about?
 
 OtelTagify is a high-performance, flexible OpenTelemetry tag generator for .NET applications. It leverages source generators to create efficient, compile-time code for mapping your object properties to OpenTelemetry tags. Whether you want to tag all properties or just a select few, OtelTagify has got you covered.
