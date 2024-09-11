@@ -7,45 +7,57 @@ Tagify is a high-performance, flexible OpenTelemetry tag generator for .NET appl
 
 ## Getting Started
 
-First things first, install the NuGet package:
+1. First things first, install the NuGet package:
 ```
 dotnet add package Tagify
 ```
 
-Next, decorate the properties you want to tag with the OtelTag attribute:
-```
-public class PaymentResponse
+2. Decorate your classes or properties with the `OtelTag` attribute:
+
+```csharp
+[ActionTag]
+public class UserInfo
 {
-    [OtelTag("transaction_id")]
-    public string TransactionId { get; set; }
+    [ActionTag("user_id")]
+    public int Id { get; set; }
 
-    [OtelTag("amount", "payment")]
-    public decimal Amount { get; set; }
+    [ActionTag("name", "user")]
+    public string Name { get; set; }
 
-    public string UntaggedProperty { get; set; }
+    public string Email { get; set; } // This won't be tagged
 }
 ```
 
-Use the generated extension method to add tags to your span:
+3. Use the generated extension method to add tags to your span:
 ```
-var response = new PaymentResponse
+var user = new UserInfo
 {
-    TransactionId = "txn_123456",
-    Amount = 100.50m,
-    UntaggedProperty = "This won't be tagged"
+    Id = 123,
+    Name = "John Doe",
+    Email = "john@example.com"
 };
 
-activity?.SetTagsFromObject(response);
+activity.AddActionTagsForUserInfo(user);
 ```
 
-And you're done! OtelTagify will generate an extension method that adds the tagged properties as span tags.
+And you're done! Tagify will generate an extension method that adds the tagged properties as span tags.
 
+## How it works
+Tagify uses source generators to create specific extension methods for each of your tagged classes. This approach:
 
-## Why OtelTagify?
+Avoids runtime reflection for better performance
+Provides a clean, type-safe API
+Allows for better IDE support (autocomplete, etc.)
 
- - Efficient: Uses source generators for zero runtime reflection cost.
- - Simple: Just add an attribute and you're good to go. 
- - Clean Code: Say goodbye to repetitive tagging code cluttering up your codebase.
+## Configuration
+By default, Tagify only tags properties marked with the ActionTag attribute. If you want to tag all public properties of a class, you can add the ActionTag attribute to the class itself (This approach is not recommended due to leaking information):
+
+## Why Tagify?
+
+- **Efficient**: Uses source generators for zero runtime reflection cost.
+- **Flexible**: Tag all properties or just the ones you choose.
+- **Simple**: Just add an attribute and you're good to go.
+- **Clean Code**: Say goodbye to repetitive tagging code cluttering up your codebase.
 
 ## Contributing
 
