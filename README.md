@@ -12,7 +12,7 @@ Tagify is a high-performance, flexible OpenTelemetry tag generator for .NET appl
 dotnet add package Tagify
 ```
 
-2. Decorate your classes or properties with the `OtelTag` attribute:
+2. Decorate your classes or properties with the `ActionTag` attribute:
 
 ```csharp
 [ActionTag]
