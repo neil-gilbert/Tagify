@@ -29,7 +29,7 @@ public class UserInfo
 ```
 
 3. Use the generated extension method to add tags to your span:
-```
+```csharp
 var user = new UserInfo
 {
     Id = 123,
