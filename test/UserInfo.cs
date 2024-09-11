@@ -4,10 +4,10 @@ namespace Tagify.Tests;
 public class UserInfo
 {
     [ActionTag("user_id")]
-    public int Id { get; set; }
+    public int? Id { get; set; }
 
     [ActionTag("name", "user")]
-    public string Name { get; set; }
+    public string? Name { get; set; }
 
-    public string Email { get; set; }
+    public string? Email { get; set; }
 }
