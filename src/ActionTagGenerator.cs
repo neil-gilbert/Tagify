@@ -27,19 +27,19 @@ public class ActionTagGenerator : ISourceGenerator
         }
     }
 
-private string GenerateExtensionMethod(INamedTypeSymbol classSymbol)
-{
-    var namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
-    var className = classSymbol.Name;
-    var methodName = $"AddActionTagsFor{className}";
+    private string GenerateExtensionMethod(INamedTypeSymbol classSymbol)
+    {
+        var namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
+        var className = classSymbol.Name;
+        var methodName = $"AddActionTagsFor{className}";
 
-    var taggedProperties = classSymbol.GetMembers()
-        .OfType<IPropertySymbol>()
-        .Where(p => p.GetAttributes().Any(a => a.AttributeClass.Name == "ActionTagAttribute"))
-        .ToList();
+        var taggedProperties = classSymbol.GetMembers()
+            .OfType<IPropertySymbol>()
+            .Where(p => p.GetAttributes().Any(a => a.AttributeClass.Name == "ActionTagAttribute"))
+            .ToList();
 
-    var sourceBuilder = new StringBuilder();
-    sourceBuilder.AppendLine($@"
+        var sourceBuilder = new StringBuilder();
+        sourceBuilder.AppendLine($@"
 using System.Diagnostics;
 using System.Collections.Generic;
 
@@ -52,18 +52,18 @@ namespace {namespaceName}
             if (activity == null || obj == null) return activity;
 ");
 
-    foreach (var property in taggedProperties)
-    {
-        var attribute = property.GetAttributes().First(a => a.AttributeClass.Name == "ActionTagAttribute");
-        var tagName = attribute.ConstructorArguments[0].Value?.ToString() ?? property.Name.ToLowerInvariant();
-        var prefix = attribute.ConstructorArguments.Length > 1 ? attribute.ConstructorArguments[1].Value?.ToString() : null;
-        var fullTagName = string.IsNullOrEmpty(prefix) ? tagName : $"{prefix}.{tagName}";
+        foreach (var property in taggedProperties)
+        {
+            var attribute = property.GetAttributes().First(a => a.AttributeClass.Name == "ActionTagAttribute");
+            var tagName = attribute.ConstructorArguments[0].Value?.ToString() ?? property.Name.ToLowerInvariant();
+            var prefix = attribute.ConstructorArguments.Length > 1 ? attribute.ConstructorArguments[1].Value?.ToString() : null;
+            var fullTagName = string.IsNullOrEmpty(prefix) ? tagName : $"{prefix}.{tagName}";
 
-        sourceBuilder.AppendLine($@"            if (obj.{property.Name} != null)
+            sourceBuilder.AppendLine($@"            if (obj.{property.Name} != null)
                 activity.SetTag(""{fullTagName}"", obj.{property.Name});");
-    }
+        }
 
-    sourceBuilder.AppendLine(@"
+        sourceBuilder.AppendLine(@"
             if (additionalTags != null)
             {
                 foreach (var tag in additionalTags)
@@ -77,10 +77,11 @@ namespace {namespaceName}
     }
 }");
 
-    return sourceBuilder.ToString();
+        return sourceBuilder.ToString();
+    }
 }
 
-public class SyntaxReceiver : ISyntaxContextReceiver
+internal class SyntaxReceiver : ISyntaxContextReceiver
 {
     public List<INamedTypeSymbol> CandidateClasses { get; } = new List<INamedTypeSymbol>();
 
