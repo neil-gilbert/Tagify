@@ -19,8 +19,8 @@ public class TagifyTests
 
         activity.AddActionTagsForUserInfo(user);
 
-        Assert.Equal("123", activity.GetTagItem("user_id"));
-        Assert.Equal("John Doe", activity.GetTagItem("user.name"));
+        Assert.Equal("123", activity.GetTagItem("user_id")?.ToString());
+        Assert.Equal("John Doe", activity.GetTagItem("user.name")?.ToString());
         Assert.Null(activity.GetTagItem("Email")); // Email should not be tagged
     }
 
@@ -37,8 +37,8 @@ public class TagifyTests
 
         activity.AddActionTagsForProductInfo(product);
 
-        Assert.Equal("PROD-001", activity.GetTagItem("product_id"));
-        Assert.Equal("29.99", activity.GetTagItem("price"));
+        Assert.Equal("PROD-001", activity.GetTagItem("product_id")?.ToString());
+        Assert.Equal("29.99", activity.GetTagItem("price")?.ToString());
     }
 
     [Fact]
