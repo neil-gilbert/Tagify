@@ -41,7 +41,9 @@ public class ActionTagGenerator : ISourceGenerator
 
         var taggedProperties = typeSymbol.GetMembers()
             .OfType<IPropertySymbol>()
-            .Where(p => classAttribute != null || p.GetAttributes().Any(a => a.AttributeClass?.Name == "ActionTagAttribute"))
+            .Where(p => p.DeclaredAccessibility == Accessibility.Public &&
+                        p.Name != "EqualityContract" &&
+                        (classAttribute != null || p.GetAttributes().Any(a => a.AttributeClass?.Name == "ActionTagAttribute")))
             .ToList();
 
         var sourceBuilder = new StringBuilder();
@@ -120,8 +122,10 @@ internal class SyntaxReceiver : ISyntaxContextReceiver
 
         var hasPropertyAttributes = symbol.GetMembers()
             .OfType<IPropertySymbol>()
-            .Any(prop => prop.GetAttributes()
-                .Any(attr => attr.AttributeClass?.Name == ActionTagGenerator.ActionTagAttributeName));
+            .Any(prop => prop.DeclaredAccessibility == Accessibility.Public &&
+                         prop.Name != "EqualityContract" &&
+                         prop.GetAttributes()
+                             .Any(attr => attr.AttributeClass?.Name == ActionTagGenerator.ActionTagAttributeName));
 
         if (hasClassAttribute || hasPropertyAttributes)
         {
