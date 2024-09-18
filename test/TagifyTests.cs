@@ -21,7 +21,7 @@ public class TagifyTests
 
         activity.AddActionTagsForUserInfo(user);
 
-        Assert.Equal("123", activity.GetTagItem("user.id"));
+        Assert.Equal("123", activity.GetTagItem("user.id")?.ToString());
         Assert.Equal("John Doe", activity.GetTagItem("user.name"));
         Assert.Equal("john@example.com", activity.GetTagItem("contact.email"));
         Assert.Equal("123 Main St", activity.GetTagItem("user.address"));
@@ -41,7 +41,7 @@ public class TagifyTests
         activity.AddActionTagsForProductInfo(product);
 
         Assert.Equal("PROD-001", activity.GetTagItem("product.id"));
-        AssertDecimalEqual(29.99m, activity.GetTagItem("price"));
+        AssertDecimalEqual(29.99m, activity.GetTagItem("price")?.ToString());
     }
 
     [Fact]
@@ -88,7 +88,7 @@ public class TagifyTests
         Assert.Equal("ITEM-001", activity.GetTagItem("item.id"));
         Assert.Equal("Test Item", activity.GetTagItem("item.name"));
         Assert.Equal("Electronics", activity.GetTagItem("metadata.category"));
-        AssertDecimalEqual(99.99m, activity.GetTagItem("price"));
+        AssertDecimalEqual(99.99m, activity.GetTagItem("price")?.ToString());
     }
 
     private void AssertDecimalEqual(decimal expected, string actual)
