@@ -12,16 +12,18 @@ public class TagifyTests
         {
             Id = 123,
             Name = "John Doe",
-            Email = "john@example.com"
+            Email = "john@example.com",
+            Address = "123 Main St"
         };
         var activity = new Activity("TestActivity");
         activity.Start();
 
         activity.AddActionTagsForUserInfo(user);
 
-        Assert.Equal("123", activity.GetTagItem("user_id")?.ToString());
-        Assert.Equal("John Doe", activity.GetTagItem("user.name")?.ToString());
-        Assert.Null(activity.GetTagItem("Email")); // Email should not be tagged
+        Assert.Equal("123", activity.GetTagItem("user.id"));
+        Assert.Equal("John Doe", activity.GetTagItem("user.name"));
+        Assert.Equal("john@example.com", activity.GetTagItem("contact.email"));
+        Assert.Equal("123 Main St", activity.GetTagItem("user.address"));
     }
 
     [Fact]
@@ -37,8 +39,8 @@ public class TagifyTests
 
         activity.AddActionTagsForProductInfo(product);
 
-        Assert.Equal("PROD-001", activity.GetTagItem("product_id")?.ToString());
-        Assert.Equal("29.99", activity.GetTagItem("price")?.ToString());
+        Assert.Equal("PROD-001", activity.GetTagItem("product_id"));
+        Assert.Equal("29.99", activity.GetTagItem("price"));
     }
 
     [Fact]
@@ -61,7 +63,46 @@ public class TagifyTests
         
         activity.AddActionTagsForUserInfo(user);
 
-        Assert.Null(activity.GetTagItem("user_id"));
+        Assert.Null(activity.GetTagItem("user.id"));
         Assert.Null(activity.GetTagItem("user.name"));
+        Assert.Null(activity.GetTagItem("contact.email"));
+        Assert.Null(activity.GetTagItem("user.address"));
     }
+
+    [Fact]
+    public void AddTagsForClassWithPrefix_ShouldRespectPrefixOverrides()
+    {
+        var item = new ItemWithPrefixOverrides
+        {
+            Id = "ITEM-001",
+            Name = "Test Item",
+            Category = "Electronics",
+            Price = 99.99m
+        };
+        var activity = new Activity("TestActivity");
+        activity.Start();
+
+        activity.AddActionTagsForItemWithPrefixOverrides(item);
+
+        Assert.Equal("ITEM-001", activity.GetTagItem("item.id"));
+        Assert.Equal("Test Item", activity.GetTagItem("item.name"));
+        Assert.Equal("Electronics", activity.GetTagItem("metadata.category"));
+        Assert.Equal("99.99", activity.GetTagItem("price"));
+    }
+}
+
+[ActionTag(prefix: "item")]
+public class ItemWithPrefixOverrides
+{
+    [ActionTag("id")]
+    public string Id { get; set; }
+
+    [ActionTag("name")]
+    public string Name { get; set; }
+
+    [ActionTag("category", prefix: "metadata")]
+    public string Category { get; set; }
+
+    [ActionTag("price", prefix: "")]
+    public decimal Price { get; set; }
 }
