@@ -1,9 +1,9 @@
 # Tagify
-A flexible, high-performance OpenTelemetry tag generator for .NET using source generators. Simplify your telemetry with automatic property-to-tag mapping and support for additional custom tags.
+A flexible, high-performance OpenTelemetry tag generator for .NET using source generators. Simplify your telemetry with automatic property-to-tag mapping.
 
 ## What's it all about?
 
-Tagify is a high-performance, flexible OpenTelemetry tag generator for .NET applications. It leverages source generators to create efficient, compile-time code for mapping your object properties to OpenTelemetry tags. Tagify focuses on explicit tagging, allowing you to precisely control which properties are included in your telemetry, while also providing the flexibility to add custom tags at runtime.
+Tagify is a high-performance, flexible OpenTelemetry tag generator for .NET applications. It leverages source generators to create efficient, compile-time code for mapping your object properties to OpenTelemetry tags. Whether you want to tag all properties or just a select few, Tagify has got you covered.
 
 ## Getting Started
 
@@ -12,86 +12,83 @@ Tagify is a high-performance, flexible OpenTelemetry tag generator for .NET appl
 dotnet add package Tagify
 ```
 
-2. Decorate your properties with the `ActionTag` attribute:
+2. Decorate your classes, records, or properties with the `ActionTag` attribute:
 
 ```csharp
+[ActionTag(prefix: "user")]
 public class UserInfo
 {
-    [ActionTag("user_id")]
-    public int? Id { get; set; }
+    [ActionTag("id")]
+    public int Id { get; set; }
 
-    [ActionTag("name", "user")]
-    public string? Name { get; set; }
+    [ActionTag("name")]
+    public string Name { get; set; }
 
-    public string? Email { get; set; } // This won't be tagged
+    [ActionTag("email", prefix: "contact")]
+    public string Email { get; set; }
+
+    public string Address { get; set; } // This will be tagged as "user.address"
+}
+
+[ActionTag(prefix: "product")]
+public record ProductInfo
+{
+    [ActionTag("id")]
+    public string Id { get; init; }
+
+    [ActionTag("price", prefix: "")]
+    public decimal Price { get; init; }
 }
 ```
 
-3. Use the generated extension method to add tags to your Activity:
+3. Use the generated extension method to add tags to your span:
 ```csharp
 var user = new UserInfo
 {
     Id = 123,
     Name = "John Doe",
-    Email = "john@example.com"
+    Email = "john@example.com",
+    Address = "123 Main St"
 };
 
-// Add tags from the UserInfo object
 activity.AddActionTagsForUserInfo(user);
 
-// You can also add additional custom tags
-var additionalTags = new Dictionary<string, object?>
+var product = new ProductInfo
 {
-    { "custom.tag1", "value1" },
-    { "custom.tag2", 42 }
+    Id = "PROD-001",
+    Price = 29.99m
 };
 
-activity.AddActionTagsForUserInfo(user, additionalTags);
+activity.AddActionTagsForProductInfo(product);
 ```
 
-And you're done! Tagify will generate an extension method that adds the tagged properties as Activity tags, along with any additional tags you provide.
+And you're done! Tagify will generate an extension method that adds the tagged properties as span tags.
 
 ## How it works
-Tagify uses source generators to create specific extension methods for each of your classes containing tagged properties. This approach:
+Tagify uses source generators to create specific extension methods for each of your tagged classes or records. This approach:
 
 - Avoids runtime reflection for better performance
 - Provides a clean, type-safe API
 - Allows for better IDE support (autocomplete, etc.)
-- Supports adding custom tags at runtime
 
 ## Configuration
-Tagify only tags properties explicitly marked with the ActionTag attribute. This ensures that you have full control over which properties are included in your telemetry, helping to prevent accidental data leakage.
+By default, Tagify tags all public properties of a class or record marked with the ActionTag attribute. You can customize the tagging behaviour:
 
-## Additional Tags
-Tagify allows you to add custom tags at runtime in addition to the tags generated from your object properties. This is useful for adding context-specific tags or dynamic values that aren't part of your object model.
-
-```csharp
-var additionalTags = new Dictionary<string, object?>
-{
-    { "request.id", Guid.NewGuid() },
-    { "environment", "production" }
-};
-
-activity.AddActionTagsForUserInfo(user, additionalTags);
-```
-
-## Type Handling
-Tagify converts all tag values to strings when setting them on the Activity. This ensures consistency in the stored tag types. When retrieving tag values, they will always be returned as strings.
+- Class/Record-level prefix: Apply a prefix to all properties in a class or record.
+- Property-level customization: Override the tag name or prefix for individual properties.
+- Exclude properties: Properties without the ActionTag attribute are not tagged unless the class/record has an ActionTag attribute.
 
 ## Why Tagify?
 
 - **Efficient**: Uses source generators for zero runtime reflection cost.
-- **Precise**: Only tag the properties you explicitly choose.
-- **Flexible**: Add custom tags at runtime for additional context.
+- **Flexible**: Tag all properties or just the ones you choose. Works with both classes and records.
 - **Simple**: Just add an attribute and you're good to go.
 - **Clean Code**: Say goodbye to repetitive tagging code cluttering up your codebase.
-- **Type-Safe**: Generate extension methods specific to your classes.
+- **Customizable**: Use prefixes at the class/record level or override them for specific properties.
+- **Consistent**: Tags are the same in your code base making it easier to filter/find data in your observability tooling
 
 ## Contributing
 
 Found a bug? Have a great idea for an improvement? Feel free to open an issue or submit a pull request.
-
-## Testing
-Tagify includes a comprehensive test suite to ensure reliability. When writing tests, remember that all tag values are stored and retrieved as strings. Don't forget to test scenarios with additional tags as well.
 
 Happy tagging! 🏷️
