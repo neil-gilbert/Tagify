@@ -36,7 +36,7 @@ public class ActionTagGenerator : ISourceGenerator
         var classAttribute = classSymbol.GetAttributes()
             .FirstOrDefault(a => a.AttributeClass?.Name == "ActionTagAttribute");
         var classPrefix = classAttribute?.ConstructorArguments.Length > 1 
-            ? classAttribute.ConstructorArguments[1].Value?.ToString() 
+            ? classAttribute?.ConstructorArguments[1].Value?.ToString() 
             : null;
 
         var taggedProperties = classSymbol.GetMembers()
@@ -61,10 +61,14 @@ namespace {namespaceName}
         foreach (var property in taggedProperties)
         {
             var attribute = property.GetAttributes().FirstOrDefault(a => a.AttributeClass?.Name == "ActionTagAttribute");
-            var tagName = attribute?.ConstructorArguments[0].Value?.ToString() ?? property.Name.ToLowerInvariant();
-            var propertyPrefix = attribute?.ConstructorArguments.Length > 1 
-                ? attribute.ConstructorArguments[1].Value?.ToString() 
+            var tagName = attribute?.ConstructorArguments.Length > 0 && attribute.ConstructorArguments[0].Value != null
+                ? attribute.ConstructorArguments[0].Value.ToString()
+                : property.Name.ToLowerInvariant();
+
+            var propertyPrefix = attribute?.ConstructorArguments.Length > 1 && attribute.ConstructorArguments[1].Value != null
+                ? attribute.ConstructorArguments[1].Value.ToString()
                 : classPrefix;
+
             var fullTagName = string.IsNullOrEmpty(propertyPrefix) ? tagName : $"{propertyPrefix}.{tagName}";
 
             sourceBuilder.AppendLine($@"            if (obj.{property.Name} != null)
