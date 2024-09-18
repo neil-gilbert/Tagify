@@ -1,10 +1,11 @@
 namespace Tagify.Tests;
 
+[ActionTag(prefix: "product")]
 public class ProductInfo
 {
-    [ActionTag("product_id")]
+    [ActionTag("id")]
     public string Id { get; set; }
 
-    [ActionTag("price")]
+    [ActionTag("price", prefix: "")]
     public decimal Price { get; set; }
 }
