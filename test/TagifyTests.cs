@@ -91,6 +91,25 @@ public class TagifyTests
         AssertDecimalEqual(99.99m, activity.GetTagItem("price")?.ToString());
     }
 
+    [Fact]
+    public void AddTagsForRecordType_ShouldAddCorrectTags()
+    {
+        var person = new PersonRecord
+        {
+            Id = 456,
+            Name = "Jane Doe",
+            Email = "jane@example.com"
+        };
+        var activity = new Activity("TestActivity");
+        activity.Start();
+
+        activity.AddActionTagsForPersonRecord(person);
+
+        Assert.Equal("456", activity.GetTagItem("person.id")?.ToString());
+        Assert.Equal("Jane Doe", activity.GetTagItem("person.name")?.ToString());
+        Assert.Equal("jane@example.com", activity.GetTagItem("contact.email")?.ToString());
+    }
+
     private void AssertDecimalEqual(decimal expected, string actual)
     {
         Assert.True(decimal.TryParse(actual, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal actualDecimal),
@@ -113,4 +132,17 @@ public class ItemWithPrefixOverrides
 
     [ActionTag("price", prefix: "")]
     public decimal Price { get; set; }
+}
+
+[ActionTag(prefix: "person")]
+public record PersonRecord
+{
+    [ActionTag("id")]
+    public int Id { get; init; }
+
+    [ActionTag("name")]
+    public string Name { get; init; }
+
+    [ActionTag("email", prefix: "contact")]
+    public string Email { get; init; }
 }
