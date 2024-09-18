@@ -20,26 +20,26 @@ public class ActionTagGenerator : ISourceGenerator
         if (!(context.SyntaxContextReceiver is SyntaxReceiver receiver))
             return;
 
-        foreach (var classSymbol in receiver.CandidateClasses)
+        foreach (var typeSymbol in receiver.CandidateTypes)
         {
-            var classSource = GenerateExtensionMethod(classSymbol);
-            context.AddSource($"{classSymbol.Name}_ActionTags.g.cs", SourceText.From(classSource, Encoding.UTF8));
+            var classSource = GenerateExtensionMethod(typeSymbol);
+            context.AddSource($"{typeSymbol.Name}_ActionTags.g.cs", SourceText.From(classSource, Encoding.UTF8));
         }
     }
 
-    private string GenerateExtensionMethod(INamedTypeSymbol classSymbol)
+    private string GenerateExtensionMethod(INamedTypeSymbol typeSymbol)
     {
-        var namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
-        var className = classSymbol.Name;
-        var methodName = $"AddActionTagsFor{className}";
+        var namespaceName = typeSymbol.ContainingNamespace.ToDisplayString();
+        var typeName = typeSymbol.Name;
+        var methodName = $"AddActionTagsFor{typeName}";
 
-        var classAttribute = classSymbol.GetAttributes()
+        var classAttribute = typeSymbol.GetAttributes()
             .FirstOrDefault(a => a.AttributeClass?.Name == "ActionTagAttribute");
         var classPrefix = classAttribute?.ConstructorArguments.Length > 1 
             ? classAttribute?.ConstructorArguments[1].Value?.ToString() 
             : null;
 
-        var taggedProperties = classSymbol.GetMembers()
+        var taggedProperties = typeSymbol.GetMembers()
             .OfType<IPropertySymbol>()
             .Where(p => classAttribute != null || p.GetAttributes().Any(a => a.AttributeClass?.Name == "ActionTagAttribute"))
             .ToList();
@@ -51,9 +51,9 @@ using System.Collections.Generic;
 
 namespace {namespaceName}
 {{
-    public static class {className}ActionExtensions
+    public static class {typeName}ActionExtensions
     {{
-        public static Activity {methodName}(this Activity activity, {className} obj, IEnumerable<KeyValuePair<string, object?>>? additionalTags = null)
+        public static Activity {methodName}(this Activity activity, {typeName} obj, IEnumerable<KeyValuePair<string, object?>>? additionalTags = null)
         {{
             if (activity == null || obj == null) return activity;
 ");
@@ -95,15 +95,26 @@ namespace {namespaceName}
 
 internal class SyntaxReceiver : ISyntaxContextReceiver
 {
-    public List<INamedTypeSymbol> CandidateClasses { get; } = new List<INamedTypeSymbol>();
+    public List<INamedTypeSymbol> CandidateTypes { get; } = new List<INamedTypeSymbol>();
 
     public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
     {
-        if (context.Node is not ClassDeclarationSyntax classDeclarationSyntax) return;
-        
-        if (context.SemanticModel.GetDeclaredSymbol(classDeclarationSyntax) is not INamedTypeSymbol
-            { DeclaredAccessibility: Accessibility.Public } symbol) return;
-        
+        if (context.Node is ClassDeclarationSyntax classDeclaration)
+        {
+            ProcessTypeDeclaration(context, classDeclaration);
+        }
+        else if (context.Node is RecordDeclarationSyntax recordDeclaration)
+        {
+            ProcessTypeDeclaration(context, recordDeclaration);
+        }
+    }
+
+    private void ProcessTypeDeclaration(GeneratorSyntaxContext context, TypeDeclarationSyntax typeDeclaration)
+    {
+        if (context.SemanticModel.GetDeclaredSymbol(typeDeclaration) is not INamedTypeSymbol
+            { DeclaredAccessibility: Accessibility.Public } symbol)
+            return;
+
         var hasClassAttribute = symbol.GetAttributes()
             .Any(attr => attr.AttributeClass?.Name == ActionTagGenerator.ActionTagAttributeName);
 
@@ -114,7 +125,7 @@ internal class SyntaxReceiver : ISyntaxContextReceiver
 
         if (hasClassAttribute || hasPropertyAttributes)
         {
-            CandidateClasses.Add(symbol);
+            CandidateTypes.Add(symbol);
         }
     }
 }
