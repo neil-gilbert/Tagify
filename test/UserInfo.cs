@@ -1,13 +1,16 @@
 namespace Tagify.Tests;
 
-[ActionTag]
+[ActionTag(prefix: "user")]
 public class UserInfo
 {
-    [ActionTag("user_id")]
+    [ActionTag("id")]
     public int? Id { get; set; }
 
-    [ActionTag("name", "user")]
+    [ActionTag("name")]
     public string? Name { get; set; }
 
+    [ActionTag("email", prefix: "contact")]
     public string? Email { get; set; }
+
+    public string? Address { get; set; }
 }
