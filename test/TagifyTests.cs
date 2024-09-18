@@ -39,7 +39,7 @@ public class TagifyTests
 
         activity.AddActionTagsForProductInfo(product);
 
-        Assert.Equal("PROD-001", activity.GetTagItem("product_id"));
+        Assert.Equal("PROD-001", activity.GetTagItem("product.id"));
         Assert.Equal("29.99", activity.GetTagItem("price"));
     }
 
