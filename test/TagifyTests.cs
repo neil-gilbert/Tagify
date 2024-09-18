@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using Xunit;
 
 namespace Tagify.Tests;
@@ -40,7 +41,7 @@ public class TagifyTests
         activity.AddActionTagsForProductInfo(product);
 
         Assert.Equal("PROD-001", activity.GetTagItem("product.id"));
-        Assert.Equal("29.99", activity.GetTagItem("price"));
+        AssertDecimalEqual(29.99m, activity.GetTagItem("price"));
     }
 
     [Fact]
@@ -87,7 +88,14 @@ public class TagifyTests
         Assert.Equal("ITEM-001", activity.GetTagItem("item.id"));
         Assert.Equal("Test Item", activity.GetTagItem("item.name"));
         Assert.Equal("Electronics", activity.GetTagItem("metadata.category"));
-        Assert.Equal("99.99", activity.GetTagItem("price"));
+        AssertDecimalEqual(99.99m, activity.GetTagItem("price"));
+    }
+
+    private void AssertDecimalEqual(decimal expected, string actual)
+    {
+        Assert.True(decimal.TryParse(actual, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal actualDecimal),
+            $"Failed to parse '{actual}' as decimal");
+        Assert.Equal(expected, actualDecimal);
     }
 }
 
