@@ -33,9 +33,15 @@ public class ActionTagGenerator : ISourceGenerator
         var className = classSymbol.Name;
         var methodName = $"AddActionTagsFor{className}";
 
+        var classAttribute = classSymbol.GetAttributes()
+            .FirstOrDefault(a => a.AttributeClass?.Name == "ActionTagAttribute");
+        var classPrefix = classAttribute?.ConstructorArguments.Length > 1 
+            ? classAttribute.ConstructorArguments[1].Value?.ToString() 
+            : null;
+
         var taggedProperties = classSymbol.GetMembers()
             .OfType<IPropertySymbol>()
-            .Where(p => p.GetAttributes().Any(a => a.AttributeClass.Name == "ActionTagAttribute"))
+            .Where(p => classAttribute != null || p.GetAttributes().Any(a => a.AttributeClass?.Name == "ActionTagAttribute"))
             .ToList();
 
         var sourceBuilder = new StringBuilder();
@@ -54,10 +60,12 @@ namespace {namespaceName}
 
         foreach (var property in taggedProperties)
         {
-            var attribute = property.GetAttributes().First(a => a.AttributeClass.Name == "ActionTagAttribute");
-            var tagName = attribute.ConstructorArguments[0].Value?.ToString() ?? property.Name.ToLowerInvariant();
-            var prefix = attribute.ConstructorArguments.Length > 1 ? attribute.ConstructorArguments[1].Value?.ToString() : null;
-            var fullTagName = string.IsNullOrEmpty(prefix) ? tagName : $"{prefix}.{tagName}";
+            var attribute = property.GetAttributes().FirstOrDefault(a => a.AttributeClass?.Name == "ActionTagAttribute");
+            var tagName = attribute?.ConstructorArguments[0].Value?.ToString() ?? property.Name.ToLowerInvariant();
+            var propertyPrefix = attribute?.ConstructorArguments.Length > 1 
+                ? attribute.ConstructorArguments[1].Value?.ToString() 
+                : classPrefix;
+            var fullTagName = string.IsNullOrEmpty(propertyPrefix) ? tagName : $"{propertyPrefix}.{tagName}";
 
             sourceBuilder.AppendLine($@"            if (obj.{property.Name} != null)
                 activity.SetTag(""{fullTagName}"", obj.{property.Name});");
