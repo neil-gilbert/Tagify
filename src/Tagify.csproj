@@ -6,13 +6,27 @@
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-        <Title>Tagify - OpenTelemetry tag generator</Title>
-        <Authors>neil-gilbert</Authors>
-        <Description>Flexible, high-performance OpenTelemetry tag generator for .NET using source generators</Description>
-        <Copyright>neil-gilbert</Copyright>
-        <PackageProjectUrl>https://github.com/neil-gilbert/Tagify</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/neil-gilbert/Tagify</RepositoryUrl>
-        <RepositoryType>git</RepositoryType>
+
+    <PackageId>Tagify</PackageId>
+    <Authors>neil-gilbert</Authors>
+    <Company>neil-gilbert</Company>
+    <Product>tagify</Product>
+    <Description>A flexible, high-performance OpenTelemetry tag generator for .NET using source generators. Simplify your telemetry with automatic property-to-tag mapping.</Description>
+    <Copyright>Copyright Neil Gilbert 2024</Copyright>
+    <PackageProjectUrl>https://github.com/neil-gilbert/Tagify</PackageProjectUrl>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/yourusername/Tagify</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>opentelemetry telemetry tags sourcegenerator dotnet tagify activity</PackageTags>
+    <PackageReleaseNotes>Initial release of Tagify.</PackageReleaseNotes>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+
+    <!-- Source Link -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     </PropertyGroup>
 
     <ItemGroup>
@@ -23,6 +37,7 @@
       <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
       <PackageReference Include="OpenTelemetry" Version="1.9.0" />
       <PackageReference Include="OpenTelemetry.Api" Version="1.9.0" />
+      <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
     </ItemGroup>
 
     <ItemGroup>
