@@ -14,8 +14,8 @@
     <Description>A flexible, high-performance OpenTelemetry tag generator for .NET using source generators. Simplify your telemetry with automatic property-to-tag mapping.</Description>
     <Copyright>Copyright Neil Gilbert 2024</Copyright>
     <PackageProjectUrl>https://github.com/neil-gilbert/Tagify</PackageProjectUrl>
-    <PackageIcon>../icon.png</PackageIcon>
-    <PackageReadmeFile>../README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/yourusername/Tagify</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>opentelemetry telemetry tags sourcegenerator dotnet tagify activity</PackageTags>
@@ -28,6 +28,15 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)../icon.png" Pack="true" PackagePath="\">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)../README.md" Pack="true" PackagePath="\">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
@@ -43,5 +52,10 @@
     <ItemGroup>
         <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     </ItemGroup>
+
+  <Target Name="CopyPackageFiles" BeforeTargets="GenerateNuspec">
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)../icon.png" DestinationFolder="$(OutputPath)" />
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)../README.md" DestinationFolder="$(OutputPath)" />
+  </Target>
 
 </Project>
