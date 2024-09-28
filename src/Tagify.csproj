@@ -6,6 +6,13 @@
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+        <Title>Tagify - OpenTelemetry tag generator</Title>
+        <Authors>neil-gilbert</Authors>
+        <Description>Flexible, high-performance OpenTelemetry tag generator for .NET using source generators</Description>
+        <Copyright>neil-gilbert</Copyright>
+        <PackageProjectUrl>https://github.com/neil-gilbert/Tagify</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/neil-gilbert/Tagify</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
     </PropertyGroup>
 
     <ItemGroup>
