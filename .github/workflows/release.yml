@@ -8,7 +8,6 @@ on:
 env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
   DOTNET_NOLOGO: true
-  NuGetDirectory: ${{ github.workspace}}/nuget
 
 defaults:
   run:
@@ -20,7 +19,12 @@ jobs:
     
     steps:
     - uses: actions/checkout@v2
-    
+
+    - name: Set Version Tag Variable
+      env:
+        TAG: ${{ github.ref_name }}
+      run: echo "VERSION=${TAG#v}" >> $GITHUB_ENV
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
@@ -30,23 +34,13 @@ jobs:
       run: dotnet restore
     
     - name: Build
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build --configuration Release --no-restore /p:Version=$VERSION
     
     - name: Test
       run: dotnet test --no-restore --verbosity normal
-    
-    - run: dotnet pack --configuration Release --output ${{ env.NuGetDirectory }}
+      
+    - run: dotnet pack --configuration Release --output nupkgs /p:PackageVersion=$VERSION
 
-    - uses: actions/upload-artifact@v3
-      with:
-        name: nuget
-        if-no-files-found: error
-        retention-days: 7
-        path: ${{ env.NuGetDirectory }}/*.nupkg
-        
     - name: Publish NuGet package
-      run: |
-          foreach($file in (Get-ChildItem "${{ env.NuGetDirectory }}" -Recurse -Include *.nupkg)) {
-              dotnet nuget push $file --api-key "${{ secrets.NUGET_APIKEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
-          }
+      run: dotnet nuget push nupkgs/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
     
