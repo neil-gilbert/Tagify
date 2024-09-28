@@ -14,8 +14,8 @@
     <Description>A flexible, high-performance OpenTelemetry tag generator for .NET using source generators. Simplify your telemetry with automatic property-to-tag mapping.</Description>
     <Copyright>Copyright Neil Gilbert 2024</Copyright>
     <PackageProjectUrl>https://github.com/neil-gilbert/Tagify</PackageProjectUrl>
-    <PackageIcon>icon.png</PackageIcon>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>../../icon.png</PackageIcon>
+    <PackageReadmeFile>../../README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/yourusername/Tagify</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>opentelemetry telemetry tags sourcegenerator dotnet tagify activity</PackageTags>
