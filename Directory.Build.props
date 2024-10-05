@@ -40,8 +40,8 @@
   </PropertyGroup>
   
   <ItemGroup Condition=" '$(IsPackable)' == 'true'">
-    <None Include="$(MSBuildThisFileDirectory)../icon.png" Pack="true" PackagePath="\"/>
-    <None Include="$(MSBuildThisFileDirectory)../README.md" Pack="true" PackagePath="\"/>
+    <None Include="$(MSBuildThisFileDirectory)\icon.png" Pack="true" PackagePath="\"/>
+    <None Include="$(MSBuildThisFileDirectory)\README.md" Pack="true" PackagePath="\"/>
     <PackageReference Include="MinVer" PrivateAssets="All" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
   </ItemGroup>
