@@ -17,7 +17,6 @@
   </PropertyGroup>
   
   <PropertyGroup Label="Package Items">
-    <PackageId>Tagify</PackageId>
     <Authors>neil-gilbert</Authors>
     <Company>neil-gilbert</Company>
     <Product>tagify</Product>
