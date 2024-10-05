@@ -36,6 +36,11 @@ jobs:
     - name: Pack
       run: dotnet pack --configuration Release --no-build -p:PackageVersion=$VERSION -o nupkgs
 
+    - name: Inspect NuGet package
+      run: |
+        unzip -l ./nupkgs/*.nupkg
+        unzip -l ./nupkgs/*.snupkg
+
     - name: Publish NuGet package
       run: dotnet nuget push ./nupkgs/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{secrets.NUGET_API_KEY}} --skip-duplicate
     
