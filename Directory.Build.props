@@ -1,0 +1,49 @@
+<Project>
+  <Sdk Name="ViHo.PackAsAnalyzer" Version="1.0.1" />
+
+  <PropertyGroup>
+    <AnalysisMode>All</AnalysisMode>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <DebugType>portable</DebugType>
+    <DefaultClassLibFramework>netstandard2.0</DefaultClassLibFramework>
+    <DefaultGeneratorConsumerFrameworks>net8.0</DefaultGeneratorConsumerFrameworks>
+    <Deterministic>true</Deterministic>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <UseArtifactsOutput>true</UseArtifactsOutput>
+  </PropertyGroup>
+  
+  <PropertyGroup Label="Package Items">
+    <PackageId>Tagify</PackageId>
+    <Authors>neil-gilbert</Authors>
+    <Company>neil-gilbert</Company>
+    <Product>tagify</Product>
+    <Copyright>Copyright Neil Gilbert 2024-$([System.DateTime]::Now.ToString(yyyy))</Copyright>
+    <Description>A flexible, high-performance OpenTelemetry tag generator for .NET using source generators. Simplify your telemetry with automatic property-to-tag mapping.</Description>
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <PackageProjectUrl>https://github.com/neil-gilbert/Tagify</PackageProjectUrl>
+    <PackageReleaseNotes>$(PackageProjectUrl)/releases</PackageReleaseNotes>
+    <PackageTags>opentelemetry telemetry tags sourcegenerator dotnet tagify activity</PackageTags>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <MinVerDefaultPreReleaseIdentifiers>preview</MinVerDefaultPreReleaseIdentifiers>
+    <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
+    <MinVerSkip Condition=" '$(Configuration)' == 'Debug' ">true</MinVerSkip>
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+  </PropertyGroup>
+  
+  <ItemGroup Condition=" '$(IsPackable)' == 'true'">
+    <None Include="$(MSBuildThisFileDirectory)../icon.png" Pack="true" PackagePath="\"/>
+    <None Include="$(MSBuildThisFileDirectory)../README.md" Pack="true" PackagePath="\"/>
+    <PackageReference Include="MinVer" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+  </ItemGroup>
+</Project>
