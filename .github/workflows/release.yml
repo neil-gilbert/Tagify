@@ -40,6 +40,7 @@ jobs:
       run: |
         unzip -l ./nupkgs/*.nupkg
         unzip -l ./nupkgs/*.snupkg
+        unzip -p ./nupkgs/*.nupkg lib/netstandard2.0/Tagify.dll | od -c | head -n 20
 
     - name: Publish NuGet package
       run: dotnet nuget push ./nupkgs/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{secrets.NUGET_API_KEY}} --skip-duplicate
