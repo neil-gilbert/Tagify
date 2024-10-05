@@ -55,6 +55,11 @@
         <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     </ItemGroup>
 
+    <ItemGroup>
+        <!-- Include the compiled source generator in the package -->
+        <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="lib\netstandard2.0" Visible="true" />
+    </ItemGroup>
+
   <Target Name="CopyPackageFiles" BeforeTargets="GenerateNuspec">
     <Copy SourceFiles="$(MSBuildThisFileDirectory)../icon.png" DestinationFolder="$(OutputPath)" />
     <Copy SourceFiles="$(MSBuildThisFileDirectory)../README.md" DestinationFolder="$(OutputPath)" />
