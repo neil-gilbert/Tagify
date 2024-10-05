@@ -7,7 +7,7 @@ namespace Tagify.Tests;
 public class TagifyTests
 {
     [Fact]
-    public void AddTagsForUserInfo_ShouldAddCorrectTags()
+    public void AddTagsForUserInfoShouldAddCorrectTags()
     {
         var user = new UserInfo
         {
@@ -28,7 +28,7 @@ public class TagifyTests
     }
 
     [Fact]
-    public void AddTagsForProductInfo_ShouldAddCorrectTags()
+    public void AddTagsForProductInfoShouldAddCorrectTags()
     {
         var product = new ProductInfo
         {
@@ -45,9 +45,9 @@ public class TagifyTests
     }
 
     [Fact]
-    public void AddTags_WithNullObject_ShouldNotThrowException()
+    public void AddTagsWithNullObjectShouldNotThrowException()
     {
-        UserInfo user = null;
+        UserInfo? user = null;
         var activity = new Activity("TestActivity");
         activity.Start();
         
@@ -56,7 +56,7 @@ public class TagifyTests
     }
 
     [Fact]
-    public void AddTags_WithNullProperties_ShouldNotAddTags()
+    public void AddTagsWithNullPropertiesShouldNotAddTags()
     {
         var user = new UserInfo(); // All properties will be null or default
         var activity = new Activity("TestActivity");
@@ -71,7 +71,7 @@ public class TagifyTests
     }
 
     [Fact]
-    public void AddTagsForClassWithPrefix_ShouldRespectPrefixOverrides()
+    public void AddTagsForClassWithPrefixShouldRespectPrefixOverrides()
     {
         var item = new ItemWithPrefixOverrides
         {
@@ -92,7 +92,7 @@ public class TagifyTests
     }
 
     [Fact]
-    public void AddTagsForRecordType_ShouldAddCorrectTags()
+    public void AddTagsForRecordTypeShouldAddCorrectTags()
     {
         var person = new PersonRecord
         {
@@ -110,7 +110,7 @@ public class TagifyTests
         Assert.Equal("jane@example.com", activity.GetTagItem("contact.email")?.ToString());
     }
 
-    private void AssertDecimalEqual(decimal expected, string actual)
+    private static void AssertDecimalEqual(decimal expected, string? actual)
     {
         Assert.True(decimal.TryParse(actual, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal actualDecimal),
             $"Failed to parse '{actual}' as decimal");
@@ -122,13 +122,13 @@ public class TagifyTests
 public class ItemWithPrefixOverrides
 {
     [ActionTag("id")]
-    public string Id { get; set; }
+    public string? Id { get; set; }
 
     [ActionTag("name")]
-    public string Name { get; set; }
+    public string? Name { get; set; }
 
     [ActionTag("category", prefix: "metadata")]
-    public string Category { get; set; }
+    public string? Category { get; set; }
 
     [ActionTag("price", prefix: "")]
     public decimal Price { get; set; }
@@ -141,8 +141,8 @@ public record PersonRecord
     public int Id { get; init; }
 
     [ActionTag("name")]
-    public string Name { get; init; }
+    public string? Name { get; init; }
 
     [ActionTag("email", prefix: "contact")]
-    public string Email { get; init; }
+    public string? Email { get; init; }
 }
