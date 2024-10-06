@@ -110,8 +110,6 @@ public class TagifyTests
         Assert.Equal("jane@example.com", activity.GetTagItem("contact.email")?.ToString());
     }
 
-    
-
     private static void AssertDecimalEqual(decimal expected, string? actual)
     {
         Assert.True(decimal.TryParse(actual, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal actualDecimal),
