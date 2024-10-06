@@ -12,24 +12,18 @@ public class ActionTagGenerator : ISourceGenerator
     
     public void Initialize(GeneratorInitializationContext context)
     {
-#pragma warning disable RS1035
         context.RegisterForSyntaxNotifications(() => new SyntaxReceiver());
-#pragma warning restore RS1035
     }
 
     public void Execute(GeneratorExecutionContext context)
     {
-#pragma warning disable RS1035
         if (!(context.SyntaxContextReceiver is SyntaxReceiver receiver))
-#pragma warning restore RS1035
             return;
 
         foreach (var typeSymbol in receiver.CandidateTypes)
         {
             var classSource = GenerateExtensionMethod(typeSymbol);
-#pragma warning disable RS1035
             context.AddSource($"{typeSymbol.Name}_ActionTags.g.cs", SourceText.From(classSource, Encoding.UTF8));
-#pragma warning restore RS1035
         }
     }
 
@@ -38,6 +32,12 @@ public class ActionTagGenerator : ISourceGenerator
         var namespaceName = typeSymbol.ContainingNamespace.ToDisplayString();
         var typeName = typeSymbol.Name;
         var methodName = $"AddActionTagsFor{typeName}";
+
+        var classAttribute = typeSymbol.GetAttributes()
+            .FirstOrDefault(a => a.AttributeClass?.Name == ActionTagAttributeName);
+        var classPrefix = classAttribute?.ConstructorArguments.Length > 1 
+            ? classAttribute?.ConstructorArguments[1].Value?.ToString() 
+            : null;
 
         var sourceBuilder = new StringBuilder();
         sourceBuilder.AppendLine($@"
@@ -48,39 +48,40 @@ namespace {namespaceName}
 {{
     public static class {typeName}ActionExtensions
     {{
-        public static Activity {methodName}(this Activity activity, {typeName} obj, string prefix = """", IEnumerable<KeyValuePair<string, object?>>? additionalTags = null)
+        public static Activity {methodName}(this Activity activity, {typeName} obj, string? parentPrefix = null, IEnumerable<KeyValuePair<string, object?>>? additionalTags = null)
         {{
             if (activity == null || obj == null) return activity;
 
-            {GeneratePropertyTaggingCode(typeSymbol, "obj", "prefix")}
+            var prefix = string.IsNullOrEmpty(parentPrefix) ? ""{classPrefix ?? ""}"" : $""{{parentPrefix}}.{classPrefix ?? ""}"";
+");
 
+        GeneratePropertyTags(sourceBuilder, typeSymbol, "obj", "prefix");
+
+        sourceBuilder.AppendLine(@"
             if (additionalTags != null)
-            {{
+            {
                 foreach (var tag in additionalTags)
-                {{
+                {
                     activity.SetTag(tag.Key, tag.Value);
-                }}
-            }}
+                }
+            }
 
             return activity;
-        }}
-    }}
-}}");
+        }
+    }
+}");
 
         return sourceBuilder.ToString();
     }
 
-    private string GeneratePropertyTaggingCode(INamedTypeSymbol typeSymbol, string objName, string prefixName)
+    private void GeneratePropertyTags(StringBuilder sourceBuilder, INamedTypeSymbol typeSymbol, string objName, string prefixName)
     {
-        var sourceBuilder = new StringBuilder();
-        var classAttribute = typeSymbol.GetAttributes().FirstOrDefault(a => a.AttributeClass?.Name == ActionTagAttributeName);
-        var classPrefix = classAttribute?.ConstructorArguments.Length > 1 ? classAttribute.ConstructorArguments[1].Value?.ToString() : null;
-
         var taggedProperties = typeSymbol.GetMembers()
             .OfType<IPropertySymbol>()
             .Where(p => p.DeclaredAccessibility == Accessibility.Public &&
                         p.Name != "EqualityContract" &&
-                        (classAttribute != null || p.GetAttributes().Any(a => a.AttributeClass?.Name == ActionTagAttributeName)))
+                        (typeSymbol.GetAttributes().Any(a => a.AttributeClass?.Name == ActionTagAttributeName) ||
+                         p.GetAttributes().Any(a => a.AttributeClass?.Name == ActionTagAttributeName)))
             .ToList();
 
         foreach (var property in taggedProperties)
@@ -89,26 +90,63 @@ namespace {namespaceName}
             var tagName = attribute?.ConstructorArguments.Length > 0 && attribute.ConstructorArguments[0].Value != null
                 ? attribute.ConstructorArguments[0].Value?.ToString()
                 : property.Name.ToLowerInvariant();
+
             var propertyPrefix = attribute?.ConstructorArguments.Length > 1 && attribute.ConstructorArguments[1].Value != null
                 ? attribute.ConstructorArguments[1].Value?.ToString()
-                : classPrefix;
+                : null;
 
-            var fullTagName = BuildFullTagName(prefixName, classPrefix, propertyPrefix, tagName ?? property.Name.ToLowerInvariant());
+            var fullTagName = string.IsNullOrEmpty(propertyPrefix) 
+                ? $"$\"{{{{prefixName}}}}.{{tagName}}\""
+                : $"$\"{{{{prefixName}}}}.{{propertyPrefix}}.{{tagName}}\"";
 
-            sourceBuilder.AppendLine($@"            if ({objName}.{property.Name} != null)
-                activity.SetTag({fullTagName}, {objName}.{property.Name}.ToString());");
+            if (IsNestedType(property.Type))
+            {
+                sourceBuilder.AppendLine($@"            if ({objName}.{property.Name} != null)
+                {{
+                    {property.Type.Name}ActionExtensions.AddActionTagsFor{property.Type.Name}(activity, {objName}.{property.Name}, {fullTagName});
+                }}");
+            }
+            else
+            {
+                sourceBuilder.AppendLine($@"            if ({objName}.{property.Name} != null)
+                {{
+                    activity.SetTag({fullTagName}, {objName}.{property.Name});
+                }}");
+            }
         }
-
-        return sourceBuilder.ToString();
     }
 
-    private string BuildFullTagName(string prefixName, string? classPrefix, string? propertyPrefix, string tagName)
+    private bool IsNestedType(ITypeSymbol type)
     {
-        var parts = new[] { $"{prefixName}", classPrefix, propertyPrefix, tagName }
-            .Where(p => !string.IsNullOrEmpty(p))
-            .Select(p => $"\"{p}\"");
+        return type is INamedTypeSymbol namedType &&
+               !namedType.IsPrimitive() &&
+               namedType.TypeKind == TypeKind.Class || namedType.TypeKind == TypeKind.Struct;
+    }
+}
 
-        return $"string.Join(\".\", new[] {{ {string.Join(", ", parts)} }}.Where(p => !string.IsNullOrEmpty(p)))";
+internal static class TypeSymbolExtensions
+{
+    public static bool IsPrimitive(this ITypeSymbol type)
+    {
+        return type.SpecialType switch
+        {
+            SpecialType.System_Boolean or
+            SpecialType.System_Byte or
+            SpecialType.System_SByte or
+            SpecialType.System_Int16 or
+            SpecialType.System_UInt16 or
+            SpecialType.System_Int32 or
+            SpecialType.System_UInt32 or
+            SpecialType.System_Int64 or
+            SpecialType.System_UInt64 or
+            SpecialType.System_Decimal or
+            SpecialType.System_Single or
+            SpecialType.System_Double or
+            SpecialType.System_Char or
+            SpecialType.System_String or
+            SpecialType.System_Object => true,
+            _ => false
+        };
     }
 }
 
