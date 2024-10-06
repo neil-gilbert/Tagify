@@ -110,6 +110,8 @@ public class TagifyTests
         Assert.Equal("jane@example.com", activity.GetTagItem("contact.email")?.ToString());
     }
 
+    
+
     private static void AssertDecimalEqual(decimal expected, string? actual)
     {
         Assert.True(decimal.TryParse(actual, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal actualDecimal),
@@ -145,24 +147,4 @@ public record PersonRecord
 
     [ActionTag("email", prefix: "contact")]
     public string? Email { get; init; }
-}
-
-[ActionTag(prefix: "user")]
-public record UserRecord
-{
-    [ActionTag("id")]
-    public int Id { get; init; }
-
-    [ActionTag("name")]
-    public string? Name { get; init; }
-    
-    [ActionTag("address")]
-    public AddressRecord? Address { get; set; }
-}
-
-[ActionTag(prefix: "address")]
-public record AddressRecord
-{
-    [ActionTag("id")]
-    public int Id { get; init; }
 }
