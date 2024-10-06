@@ -6,6 +6,7 @@ using System.Text;
 namespace Tagify.Generator;
 
 [Generator]
+[SuppressMessage("MicrosoftCodeAnalysisCorrectness", "RS1035:Do not use APIs banned for analyzers")]
 public class ActionTagGenerator : ISourceGenerator
 {
     public const string ActionTagAttributeName = "ActionTagAttribute";
@@ -118,9 +119,12 @@ namespace {namespaceName}
 
     private bool IsNestedType(ITypeSymbol type)
     {
-        return type is INamedTypeSymbol namedType &&
-               !namedType.IsPrimitive() &&
-               namedType.TypeKind == TypeKind.Class || namedType.TypeKind == TypeKind.Struct;
+        if (type is INamedTypeSymbol namedType)
+        {
+            return !namedType.IsPrimitive() &&
+                   (namedType.TypeKind == TypeKind.Class || namedType.TypeKind == TypeKind.Struct);
+        }
+        return false;
     }
 }
 
