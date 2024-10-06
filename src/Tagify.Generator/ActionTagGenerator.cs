@@ -1,4 +1,4 @@
-using Microsoft.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System.Text;
@@ -6,25 +6,30 @@ using System.Text;
 namespace Tagify.Generator;
 
 [Generator]
-[SuppressMessage("MicrosoftCodeAnalysisCorrectness", "RS1035:Do not use APIs banned for analyzers")]
 public class ActionTagGenerator : ISourceGenerator
 {
     public const string ActionTagAttributeName = "ActionTagAttribute";
     
     public void Initialize(GeneratorInitializationContext context)
     {
+#pragma warning disable RS1035
         context.RegisterForSyntaxNotifications(() => new SyntaxReceiver());
+#pragma warning restore RS1035
     }
 
     public void Execute(GeneratorExecutionContext context)
     {
+#pragma warning disable RS1035
         if (!(context.SyntaxContextReceiver is SyntaxReceiver receiver))
+#pragma warning restore RS1035
             return;
 
         foreach (var typeSymbol in receiver.CandidateTypes)
         {
             var classSource = GenerateExtensionMethod(typeSymbol);
+#pragma warning disable RS1035
             context.AddSource($"{typeSymbol.Name}_ActionTags.g.cs", SourceText.From(classSource, Encoding.UTF8));
+#pragma warning restore RS1035
         }
     }
 
