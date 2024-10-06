@@ -64,6 +64,16 @@ namespace {namespaceName}
 
             return activity;
         }}
+
+        private static void AddNestedActionTags(Activity activity, object nestedObj, string prefix)
+        {{
+            var nestedType = nestedObj.GetType();
+            var addActionTagsMethod = nestedType.GetMethod(""AddActionTagsFor"" + nestedType.Name, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+            if (addActionTagsMethod != null)
+            {{
+                addActionTagsMethod.Invoke(null, new object[] {{ activity, nestedObj, prefix, null }});
+            }}
+        }}
     }}
 }}");
 
@@ -98,7 +108,7 @@ namespace {namespaceName}
             if (HasActionTagAttribute(property.Type))
             {
                 sourceBuilder.AppendLine($@"            if ({objName}.{property.Name} != null)
-                AddActionTagsFor{property.Type.Name}(activity, {objName}.{property.Name}, {fullTagName});");
+                AddNestedActionTags(activity, {objName}.{property.Name}, {fullTagName});");
             }
             else
             {
@@ -109,7 +119,7 @@ namespace {namespaceName}
 
         return sourceBuilder.ToString();
     }
-
+    
     private bool HasActionTagAttribute(ITypeSymbol type)
     {
         return type.GetAttributes().Any(a => a.AttributeClass?.Name == ActionTagAttributeName);
