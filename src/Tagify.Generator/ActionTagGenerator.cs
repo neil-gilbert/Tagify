@@ -64,16 +64,6 @@ namespace {namespaceName}
 
             return activity;
         }}
-
-        private static void AddNestedActionTags(Activity activity, object nestedObj, string prefix)
-        {{
-            var nestedType = nestedObj.GetType();
-            var addActionTagsMethod = nestedType.GetMethod(""AddActionTagsFor"" + nestedType.Name, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-            if (addActionTagsMethod != null)
-            {{
-                addActionTagsMethod.Invoke(null, new object[] {{ activity, nestedObj, prefix, null }});
-            }}
-        }}
     }}
 }}");
 
@@ -105,24 +95,11 @@ namespace {namespaceName}
 
             var fullTagName = BuildFullTagName(prefixName, classPrefix, propertyPrefix, tagName ?? property.Name.ToLowerInvariant());
 
-            if (HasActionTagAttribute(property.Type))
-            {
-                sourceBuilder.AppendLine($@"            if ({objName}.{property.Name} != null)
-                AddNestedActionTags(activity, {objName}.{property.Name}, {fullTagName});");
-            }
-            else
-            {
-                sourceBuilder.AppendLine($@"            if ({objName}.{property.Name} != null)
-                activity.SetTag({fullTagName}, {objName}.{property.Name});");
-            }
+            sourceBuilder.AppendLine($@"            if ({objName}.{property.Name} != null)
+                activity.SetTag({fullTagName}, {objName}.{property.Name}.ToString());");
         }
 
         return sourceBuilder.ToString();
-    }
-    
-    private bool HasActionTagAttribute(ITypeSymbol type)
-    {
-        return type.GetAttributes().Any(a => a.AttributeClass?.Name == ActionTagAttributeName);
     }
 
     private string BuildFullTagName(string prefixName, string? classPrefix, string? propertyPrefix, string tagName)
