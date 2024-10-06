@@ -93,12 +93,12 @@ namespace {namespaceName}
                 ? attribute.ConstructorArguments[1].Value?.ToString()
                 : classPrefix;
 
-            var fullTagName = BuildFullTagName(prefixName, classPrefix, propertyPrefix, tagName);
+            var fullTagName = BuildFullTagName(prefixName, classPrefix, propertyPrefix, tagName ?? property.Name.ToLowerInvariant());
 
             if (HasActionTagAttribute(property.Type))
             {
                 sourceBuilder.AppendLine($@"            if ({objName}.{property.Name} != null)
-                {methodName}(activity, {objName}.{property.Name}, {fullTagName});");
+                AddActionTagsFor{property.Type.Name}(activity, {objName}.{property.Name}, {fullTagName});");
             }
             else
             {
