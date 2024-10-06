@@ -146,3 +146,23 @@ public record PersonRecord
     [ActionTag("email", prefix: "contact")]
     public string? Email { get; init; }
 }
+
+[ActionTag(prefix: "user")]
+public record UserRecord
+{
+    [ActionTag("id")]
+    public int Id { get; init; }
+
+    [ActionTag("name")]
+    public string? Name { get; init; }
+    
+    [ActionTag("address")]
+    public AddressRecord? Address { get; set; }
+}
+
+[ActionTag(prefix: "address")]
+public record AddressRecord
+{
+    [ActionTag("id")]
+    public int Id { get; init; }
+}
