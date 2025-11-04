@@ -57,9 +57,22 @@ namespace {namespaceName}
         public static Activity {methodName}(this Activity activity, {typeName} obj, string? parentPrefix = null, IEnumerable<KeyValuePair<string, object?>>? additionalTags = null)
         {{
             if (activity == null || obj == null) return activity;
-
-            var prefix = string.IsNullOrEmpty(parentPrefix) ? ""{classPrefix ?? ""}"" : $""{{parentPrefix}}.{classPrefix ?? ""}"";
 ");
+
+        // Build the line that initializes the local 'prefix' variable in the generated method.
+        string prefixLine;
+        if (string.IsNullOrEmpty(classPrefix))
+        {
+            // No class-level prefix: inherit parentPrefix as-is (or empty if not provided)
+            prefixLine = "            var prefix = string.IsNullOrEmpty(parentPrefix) ? string.Empty : parentPrefix;";
+        }
+        else
+        {
+            // Class-level prefix present: append to parent when provided
+            prefixLine = $"            var prefix = string.IsNullOrEmpty(parentPrefix) ? \"{classPrefix}\" : $\"{{parentPrefix}}.{classPrefix}\";";
+        }
+        sourceBuilder.AppendLine(prefixLine);
+        sourceBuilder.AppendLine("\n");
 
         GeneratePropertyTags(sourceBuilder, typeSymbol, "obj", "prefix");
 
@@ -101,23 +114,77 @@ namespace {namespaceName}
                 ? attribute.ConstructorArguments[1].Value?.ToString()
                 : null;
 
-            var fullTagName = string.IsNullOrEmpty(propertyPrefix) 
-                ? $"$\"{{{{prefixName}}}}.{{tagName}}\""
-                : $"$\"{{{{prefixName}}}}.{{propertyPrefix}}.{{tagName}}\"";
-
-            if (IsNestedType(property.Type))
+            // Build the tag key expression for primitive properties.
+            // Rules:
+            // - If propertyPrefix is null: use class-level prefix (variable 'prefix') when not empty; otherwise just tagName
+            // - If propertyPrefix is "": ignore class prefix entirely and use just tagName
+            // - If propertyPrefix is non-empty: ignore class prefix and use "{propertyPrefix}.{tagName}"
+            string fullTagExpr;
+            if (propertyPrefix is null)
             {
-                sourceBuilder.AppendLine($@"            if ({objName}.{property.Name} != null)
-                {{
-                    {property.Type.Name}ActionExtensions.AddActionTagsFor{property.Type.Name}(activity, {objName}.{property.Name}, {fullTagName});
-                }}");
+                fullTagExpr = $"(string.IsNullOrEmpty({prefixName}) ? \"{tagName}\" : $\"{{{prefixName}}}.{tagName}\")";
+            }
+            else if (propertyPrefix.Length == 0)
+            {
+                fullTagExpr = $"\"{tagName}\"";
             }
             else
             {
+                fullTagExpr = $"\"{propertyPrefix}.{tagName}\"";
+            }
+
+            // For nested types, compute what to pass as the parent prefix into the nested call.
+            // If propertyPrefix is null -> pass current prefix variable; if "" -> pass null; else pass the literal propertyPrefix.
+            string nestedParentPrefixArg;
+            if (propertyPrefix is null)
+            {
+                nestedParentPrefixArg = prefixName;
+            }
+            else if (propertyPrefix.Length == 0)
+            {
+                nestedParentPrefixArg = "null";
+            }
+            else
+            {
+                nestedParentPrefixArg = $"\"{propertyPrefix}\"";
+            }
+
+            var isNullableValueType = property.Type is INamedTypeSymbol nt && nt.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T;
+            var isNonNullableValueType = property.Type.IsValueType && !isNullableValueType;
+            var isNested = IsNestedType(property.Type) && !isNullableValueType;
+
+            if (isNested)
+            {
+                // Only traverse when the nested object is not null
                 sourceBuilder.AppendLine($@"            if ({objName}.{property.Name} != null)
-                {{
-                    activity.SetTag({fullTagName}, {objName}.{property.Name});
-                }}");
+            {{
+                {property.Type.Name}ActionExtensions.AddActionTagsFor{property.Type.Name}(activity, {objName}.{property.Name}, {nestedParentPrefixArg});
+            }}");
+            }
+            else
+            {
+                if (isNonNullableValueType)
+                {
+                    // Always set tag for non-nullable value types
+                    sourceBuilder.AppendLine($@"            activity.SetTag({fullTagExpr}, {objName}.{property.Name});
+");
+                }
+                else if (isNullableValueType)
+                {
+                    // Set tag only when HasValue for nullable value types
+                    sourceBuilder.AppendLine($@"            if ({objName}.{property.Name}.HasValue)
+            {{
+                activity.SetTag({fullTagExpr}, {objName}.{property.Name});
+            }}");
+                }
+                else
+                {
+                    // Reference types: set when not null
+                    sourceBuilder.AppendLine($@"            if ({objName}.{property.Name} != null)
+            {{
+                activity.SetTag({fullTagExpr}, {objName}.{property.Name});
+            }}");
+                }
             }
         }
     }
