@@ -48,7 +48,7 @@ public class NestedObjectTagifyTests
 
         Assert.Equal("123", activity.GetTagItem("user.id")?.ToString());
         Assert.Equal("John Doe", activity.GetTagItem("user.name"));
-        Assert.Equal("456", activity.GetTagItem("user.address.id"));
+        Assert.Equal("456", activity.GetTagItem("user.address.id")?.ToString());
         Assert.Equal("123 Main St", activity.GetTagItem("user.address.street"));
     }
 
@@ -115,9 +115,9 @@ public class NestedObjectTagifyTests
 
         Assert.Equal("123", activity.GetTagItem("user.id")?.ToString());
         Assert.Equal("John Doe", activity.GetTagItem("user.name"));
-        Assert.Equal("456", activity.GetTagItem("user.address.id"));
+        Assert.Equal("456", activity.GetTagItem("user.address.id")?.ToString());
         Assert.Equal("123 Main St", activity.GetTagItem("user.address.street"));
         Assert.Equal("custom value", activity.GetTagItem("custom.tag"));
-        Assert.Equal("42", activity.GetTagItem("another.tag"));
+        Assert.Equal("42", activity.GetTagItem("another.tag")?.ToString());
     }
 }
