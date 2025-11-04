@@ -46,7 +46,7 @@ public class NestedObjectTagifyTests
 
         activity.AddActionTagsForUserRecord(user);
 
-        Assert.Equal("123", activity.GetTagItem("user.id"));
+        Assert.Equal("123", activity.GetTagItem("user.id")?.ToString());
         Assert.Equal("John Doe", activity.GetTagItem("user.name"));
         Assert.Equal("456", activity.GetTagItem("user.address.id"));
         Assert.Equal("123 Main St", activity.GetTagItem("user.address.street"));
@@ -66,7 +66,7 @@ public class NestedObjectTagifyTests
 
         activity.AddActionTagsForUserRecord(user);
 
-        Assert.Equal("123", activity.GetTagItem("user.id"));
+        Assert.Equal("123", activity.GetTagItem("user.id")?.ToString());
         Assert.Equal("John Doe", activity.GetTagItem("user.name"));
         Assert.Null(activity.GetTagItem("user.address.id"));
         Assert.Null(activity.GetTagItem("user.address.street"));
@@ -85,7 +85,7 @@ public class NestedObjectTagifyTests
 
         activity.AddActionTagsForAddressRecord(address);
 
-        Assert.Equal("789", activity.GetTagItem("address.id"));
+        Assert.Equal("789", activity.GetTagItem("address.id")?.ToString());
         Assert.Equal("456 Elm St", activity.GetTagItem("address.street"));
     }
 
@@ -113,7 +113,7 @@ public class NestedObjectTagifyTests
 
         activity.AddActionTagsForUserRecord(user, additionalTags: additionalTags);
 
-        Assert.Equal("123", activity.GetTagItem("user.id"));
+        Assert.Equal("123", activity.GetTagItem("user.id")?.ToString());
         Assert.Equal("John Doe", activity.GetTagItem("user.name"));
         Assert.Equal("456", activity.GetTagItem("user.address.id"));
         Assert.Equal("123 Main St", activity.GetTagItem("user.address.street"));
