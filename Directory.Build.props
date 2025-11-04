@@ -6,7 +6,7 @@
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     <DebugType>portable</DebugType>
     <DefaultClassLibFramework>netstandard2.0</DefaultClassLibFramework>
-    <DefaultGeneratorConsumerFrameworks>net8.0</DefaultGeneratorConsumerFrameworks>
+    <DefaultGeneratorConsumerFrameworks>net9.0</DefaultGeneratorConsumerFrameworks>
     <Deterministic>true</Deterministic>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
