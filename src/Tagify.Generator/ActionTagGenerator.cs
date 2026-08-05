@@ -6,34 +6,53 @@ using System.Text;
 namespace Tagify.Generator;
 
 [Generator]
-public class ActionTagGenerator : ISourceGenerator
+public class ActionTagGenerator : IIncrementalGenerator
 {
     public const string ActionTagAttributeName = "ActionTagAttribute";
     
-    public void Initialize(GeneratorInitializationContext context)
+    public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-#pragma warning disable RS1035
-        context.RegisterForSyntaxNotifications(() => new SyntaxReceiver());
-#pragma warning restore RS1035
-    }
+        var candidateTypes = context.SyntaxProvider.CreateSyntaxProvider(
+            static (node, _) => node is ClassDeclarationSyntax || node is RecordDeclarationSyntax,
+            static (ctx, _) => GetCandidateType(ctx))
+            .Where(static s => s is not null)!
+            .Select(static (s, _) => s!);
 
-    public void Execute(GeneratorExecutionContext context)
-    {
-#pragma warning disable RS1035
-        if (!(context.SyntaxContextReceiver is SyntaxReceiver receiver))
-#pragma warning restore RS1035
-            return;
-
-        foreach (var typeSymbol in receiver.CandidateTypes)
+        context.RegisterSourceOutput(candidateTypes, static (spc, typeSymbol) =>
         {
             var classSource = GenerateExtensionMethod(typeSymbol);
-#pragma warning disable RS1035
-            context.AddSource($"{typeSymbol.Name}_ActionTags.g.cs", SourceText.From(classSource, Encoding.UTF8));
-#pragma warning restore RS1035
-        }
+            spc.AddSource(GetHintName(typeSymbol), SourceText.From(classSource, Encoding.UTF8));
+        });
     }
 
-    private string GenerateExtensionMethod(INamedTypeSymbol typeSymbol)
+    private static string GetHintName(INamedTypeSymbol typeSymbol)
+    {
+        var ns = typeSymbol.ContainingNamespace is { IsGlobalNamespace: false } ? typeSymbol.ContainingNamespace.ToDisplayString() : "global";
+        var safeNs = ns.Replace('.', '_');
+        return $"{safeNs}_{typeSymbol.Name}_ActionTags.g.cs";
+    }
+
+    private static INamedTypeSymbol? GetCandidateType(GeneratorSyntaxContext context)
+    {
+        if (context.Node is not TypeDeclarationSyntax tds)
+            return null;
+
+        if (context.SemanticModel.GetDeclaredSymbol(tds) is not INamedTypeSymbol { DeclaredAccessibility: Accessibility.Public } symbol)
+            return null;
+
+        bool HasAttr(AttributeData a) => a.AttributeClass?.Name == ActionTagAttributeName || a.AttributeClass?.ToDisplayString() == "Tagify.ActionTagAttribute";
+
+        var hasClassAttribute = symbol.GetAttributes().Any(HasAttr);
+        var hasPropertyAttributes = symbol.GetMembers()
+            .OfType<IPropertySymbol>()
+            .Any(prop => prop.DeclaredAccessibility == Accessibility.Public &&
+                         prop.Name != "EqualityContract" &&
+                         prop.GetAttributes().Any(HasAttr));
+
+        return (hasClassAttribute || hasPropertyAttributes) ? symbol : null;
+    }
+
+    private static string GenerateExtensionMethod(INamedTypeSymbol typeSymbol)
     {
         var namespaceName = typeSymbol.ContainingNamespace.ToDisplayString();
         var typeName = typeSymbol.Name;
@@ -93,7 +112,7 @@ namespace {namespaceName}
         return sourceBuilder.ToString();
     }
 
-    private void GeneratePropertyTags(StringBuilder sourceBuilder, INamedTypeSymbol typeSymbol, string objName, string prefixName)
+    private static void GeneratePropertyTags(StringBuilder sourceBuilder, INamedTypeSymbol typeSymbol, string objName, string prefixName)
     {
         var taggedProperties = typeSymbol.GetMembers()
             .OfType<IPropertySymbol>()
@@ -189,7 +208,7 @@ namespace {namespaceName}
         }
     }
 
-    private bool IsNestedType(ITypeSymbol type)
+    private static bool IsNestedType(ITypeSymbol type)
     {
         if (type is INamedTypeSymbol namedType)
         {
@@ -226,41 +245,4 @@ internal static class TypeSymbolExtensions
     }
 }
 
-internal class SyntaxReceiver : ISyntaxContextReceiver
-{
-    public List<INamedTypeSymbol> CandidateTypes { get; } = new List<INamedTypeSymbol>();
-
-    public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
-    {
-        if (context.Node is ClassDeclarationSyntax classDeclaration)
-        {
-            ProcessTypeDeclaration(context, classDeclaration);
-        }
-        else if (context.Node is RecordDeclarationSyntax recordDeclaration)
-        {
-            ProcessTypeDeclaration(context, recordDeclaration);
-        }
-    }
-
-    private void ProcessTypeDeclaration(GeneratorSyntaxContext context, TypeDeclarationSyntax typeDeclaration)
-    {
-        if (context.SemanticModel.GetDeclaredSymbol(typeDeclaration) is not INamedTypeSymbol
-            { DeclaredAccessibility: Accessibility.Public } symbol)
-            return;
-
-        var hasClassAttribute = symbol.GetAttributes()
-            .Any(attr => attr.AttributeClass?.Name == ActionTagGenerator.ActionTagAttributeName);
-
-        var hasPropertyAttributes = symbol.GetMembers()
-            .OfType<IPropertySymbol>()
-            .Any(prop => prop.DeclaredAccessibility == Accessibility.Public &&
-                         prop.Name != "EqualityContract" &&
-                         prop.GetAttributes()
-                             .Any(attr => attr.AttributeClass?.Name == ActionTagGenerator.ActionTagAttributeName));
-
-        if (hasClassAttribute || hasPropertyAttributes)
-        {
-            CandidateTypes.Add(symbol);
-        }
-    }
-}
+// No SyntaxReceiver needed with Incremental Generators
